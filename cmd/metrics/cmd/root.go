@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/arjungandhi/health/pkg/store"
+	"github.com/arjungandhi/metrics/pkg/store"
 	"github.com/spf13/cobra"
 )
 
@@ -15,16 +15,16 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "health",
-	Short: "Track health metrics from the command line",
+	Use:   "metrics",
+	Short: "Track metrics from the command line",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		dir := os.Getenv("HEALTH_DIR")
+		dir := os.Getenv("METRICS_DIR")
 		if dir == "" {
 			home, err := os.UserHomeDir()
 			if err != nil {
 				return err
 			}
-			dir = filepath.Join(home, ".local", "share", "health")
+			dir = filepath.Join(home, ".local", "share", "metrics")
 		}
 
 		ls, err := store.NewLocalStore(dir)
@@ -42,7 +42,7 @@ var rootCmd = &cobra.Command{
 		if username == "" {
 			username, err = s.DefaultUser()
 			if err != nil {
-				return fmt.Errorf("%w\nRun 'health user add <name>' to create a user", err)
+				return fmt.Errorf("%w\nRun 'metrics user add <name>' to create a user", err)
 			}
 		}
 

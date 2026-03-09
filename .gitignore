@@ -25,6 +25,6 @@
 go.work
 
 # Project binary
-/health
+/metrics
 
 # End of https://www.toptal.com/developers/gitignore/api/go

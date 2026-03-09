@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/arjungandhi/health/pkg/metric"
+	"github.com/arjungandhi/metrics/pkg/metric"
 	"github.com/spf13/cobra"
 )
 

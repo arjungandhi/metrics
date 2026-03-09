@@ -1,5 +1,5 @@
 {
-  description = "Health tracking CLI";
+  description = "Metrics tracking CLI";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -19,17 +19,17 @@
       in
       {
         packages.default = pkgs.buildGoModule {
-          pname = "health";
+          pname = "metrics";
           version = "0.1.0";
           src = ./.;
           vendorHash = "sha256-7K17JaXFsjf163g5PXCb5ng2gYdotnZ2IDKk8KFjNj0=";
-          subPackages = [ "cmd/health" ];
+          subPackages = [ "cmd/metrics" ];
 
           meta = with pkgs.lib; {
-            description = "Health tracking CLI";
-            homepage = "https://github.com/arjungandhi/health";
+            description = "Metrics tracking CLI";
+            homepage = "https://github.com/arjungandhi/metrics";
             license = licenses.mit;
-            mainProgram = "health";
+            mainProgram = "metrics";
           };
         };
 

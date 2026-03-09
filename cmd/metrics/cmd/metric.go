@@ -4,7 +4,7 @@ import "github.com/spf13/cobra"
 
 var metricCmd = &cobra.Command{
 	Use:   "metric",
-	Short: "Manage health metrics",
+	Short: "Manage metrics",
 }
 
 func init() {

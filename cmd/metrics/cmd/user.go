@@ -39,7 +39,7 @@ var userListCmd = &cobra.Command{
 			return err
 		}
 		if len(users) == 0 {
-			fmt.Println("No users configured. Run 'health user add <name>' to create one.")
+			fmt.Println("No users configured. Run 'metrics user add <name>' to create one.")
 			return nil
 		}
 

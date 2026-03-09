@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/arjungandhi/health/pkg/metric"
+	"github.com/arjungandhi/metrics/pkg/metric"
 )
 
 type localConfig struct {

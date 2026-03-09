@@ -5,7 +5,7 @@ test: deps
     go test -v ./...
 
 install: deps
-    go install ./cmd/health
+    go install ./cmd/metrics
 
 # Build with Nix
 nix-build:

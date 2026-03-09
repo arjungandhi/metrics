@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/arjungandhi/health/pkg/metric"
-	"github.com/arjungandhi/health/pkg/store"
+	"github.com/arjungandhi/metrics/pkg/metric"
+	"github.com/arjungandhi/metrics/pkg/store"
 )
 
 //go:embed static/*

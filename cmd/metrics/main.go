@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/arjungandhi/health/cmd/health/cmd"
+	"github.com/arjungandhi/metrics/cmd/metrics/cmd"
 )
 
 func main() {

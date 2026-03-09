@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/arjungandhi/health/pkg/web"
+	"github.com/arjungandhi/metrics/pkg/web"
 	"github.com/spf13/cobra"
 )
 
@@ -14,7 +14,7 @@ var serveCmd = &cobra.Command{
 	Short: "Start the web UI",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		addr := fmt.Sprintf(":%d", servePort)
-		fmt.Printf("Starting health UI at http://localhost%s\n", addr)
+		fmt.Printf("Starting metrics UI at http://localhost%s\n", addr)
 		return web.Serve(addr, s)
 	},
 }

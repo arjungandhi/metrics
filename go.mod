@@ -1,4 +1,4 @@
-module github.com/arjungandhi/health
+module github.com/arjungandhi/metrics
 
 go 1.25.3
 
