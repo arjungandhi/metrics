@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/arjungandhi/metrics/pkg/metric"
@@ -10,9 +11,8 @@ import (
 )
 
 var (
-	unit     string
-	itemName string
-	day      string
+	day        string
+	labelFlags []string
 )
 
 var addCmd = &cobra.Command{
@@ -36,30 +36,42 @@ var addCmd = &cobra.Command{
 			ts = time.Now()
 		}
 
-		if itemName != "" {
-			item := metric.Item{Name: itemName, Value: value}
-			if err := s.AddItemToDay(name, unit, item, ts); err != nil {
-				return err
-			}
-			fmt.Printf("Added %s (%.2f) to %s\n", itemName, value, name)
-		} else {
-			dp := metric.DataPoint{
-				Time:  ts,
-				Value: value,
-			}
-			if err := s.AddDataPoint(name, unit, dp); err != nil {
-				return err
-			}
-			fmt.Printf("Added %.2f to %s\n", value, name)
+		labels, err := parseLabels(labelFlags)
+		if err != nil {
+			return err
 		}
+
+		dp := metric.DataPoint{
+			Time:   ts,
+			Value:  value,
+			Labels: labels,
+		}
+		if err := s.AddDataPoint(name, dp); err != nil {
+			return err
+		}
+		fmt.Printf("Added %.2f to %s\n", value, name)
 
 		return nil
 	},
 }
 
+func parseLabels(flags []string) (map[string]string, error) {
+	if len(flags) == 0 {
+		return nil, nil
+	}
+	labels := make(map[string]string, len(flags))
+	for _, f := range flags {
+		k, v, ok := strings.Cut(f, "=")
+		if !ok {
+			return nil, fmt.Errorf("invalid label %q (expected key=value)", f)
+		}
+		labels[k] = v
+	}
+	return labels, nil
+}
+
 func init() {
-	addCmd.Flags().StringVarP(&unit, "unit", "u", "", "unit of measurement (e.g. lbs, kcal, hours)")
-	addCmd.Flags().StringVarP(&itemName, "item", "i", "", "item name (accumulates into the day's data point)")
 	addCmd.Flags().StringVarP(&day, "day", "d", "", "date for the entry (YYYY-MM-DD, defaults to today)")
+	addCmd.Flags().StringArrayVarP(&labelFlags, "label", "l", nil, "label in key=value format (repeatable)")
 	metricCmd.AddCommand(addCmd)
 }

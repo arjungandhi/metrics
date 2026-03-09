@@ -2,41 +2,33 @@ package store
 
 import (
 	"errors"
-	"slices"
 	"time"
 
 	"github.com/arjungandhi/metrics/pkg/metric"
 )
 
-var (
-	ErrNotFound      = errors.New("metric not found")
-	ErrUserNotFound  = errors.New("user not found")
-	ErrUserExists    = errors.New("user already exists")
-	ErrNoUsers       = errors.New("no users configured")
-	ErrNoUser        = errors.New("no active user set")
-	ErrNoDefaultUser = errors.New("no default user set")
-)
+var ErrNotFound = errors.New("metric not found")
 
-func hasUser(users []User, name string) bool {
-	return slices.ContainsFunc(users, func(u User) bool { return u.Name == name })
-}
-
-type User struct {
-	Name string `json:"name"`
+// MatchLabels returns true if every key/value in the filter exists in the target.
+func MatchLabels(target, filter map[string]string) bool {
+	for k, v := range filter {
+		if target[k] != v {
+			return false
+		}
+	}
+	return true
 }
 
 type Store interface {
-	// User management
-	AddUser(name string) error
-	ListUsers() ([]User, error)
-	DefaultUser() (string, error)
-	SetDefaultUser(name string) error
-	SetUser(name string) error
+	// AddDataPoint adds a data point to the named metric, creating it if needed.
+	AddDataPoint(metricName string, dp metric.DataPoint) error
 
-	// Metric operations (require an active user)
-	AddDataPoint(metricName string, unit string, dp metric.DataPoint) error
-	AddItemToDay(metricName string, unit string, item metric.Item, ts time.Time) error
+	// GetMetric returns the full metric by name.
 	GetMetric(name string) (*metric.Metric, error)
+
+	// GetMetricRange returns data points within [start, end].
 	GetMetricRange(name string, start, end time.Time) (*metric.Metric, error)
+
+	// ListMetrics returns all metric names.
 	ListMetrics() ([]string, error)
 }

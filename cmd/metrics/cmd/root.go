@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -9,10 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	s        store.Store
-	userFlag string
-)
+var s store.Store
 
 var rootCmd = &cobra.Command{
 	Use:   "metrics",
@@ -32,28 +28,10 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 		s = ls
-
-		// User subcommands don't require an active user.
-		if cmd.Parent() == userCmd || cmd == userCmd {
-			return nil
-		}
-
-		username := userFlag
-		if username == "" {
-			username, err = s.DefaultUser()
-			if err != nil {
-				return fmt.Errorf("%w\nRun 'metrics user add <name>' to create a user", err)
-			}
-		}
-
-		return s.SetUser(username)
+		return nil
 	},
 }
 
 func Execute() error {
 	return rootCmd.Execute()
-}
-
-func init() {
-	rootCmd.PersistentFlags().StringVar(&userFlag, "user", "", "user profile to use (overrides default)")
 }

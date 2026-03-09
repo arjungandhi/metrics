@@ -26,7 +26,6 @@ func Serve(addr string, s store.Store) error {
 	mux.HandleFunc("GET /api/metrics", apiListMetrics(s))
 	mux.HandleFunc("GET /api/metrics/{name}", apiGetMetric(s))
 	mux.HandleFunc("POST /api/metrics/{name}/datapoints", apiAddDataPoint(s))
-	mux.HandleFunc("POST /api/metrics/{name}/items", apiAddItem(s))
 
 	return http.ListenAndServe(addr, mux)
 }
@@ -73,7 +72,7 @@ func apiGetMetric(s store.Store) http.HandlerFunc {
 				writeError(w, http.StatusBadRequest, "invalid date format (expected YYYY-MM-DD)")
 				return
 			}
-			end = end.Add(24*time.Hour - time.Nanosecond) // inclusive of whole day
+			end = end.Add(24*time.Hour - time.Nanosecond)
 			m, err = s.GetMetricRange(name, start, end)
 		} else {
 			m, err = s.GetMetric(name)
@@ -92,9 +91,9 @@ func apiGetMetric(s store.Store) http.HandlerFunc {
 }
 
 type addDataPointReq struct {
-	Value float64 `json:"value"`
-	Date  string  `json:"date"` // YYYY-MM-DD, optional
-	Unit  string  `json:"unit"`
+	Value  float64           `json:"value"`
+	Date   string            `json:"date"` // YYYY-MM-DD, optional
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 func apiAddDataPoint(s store.Store) http.HandlerFunc {
@@ -117,51 +116,8 @@ func apiAddDataPoint(s store.Store) http.HandlerFunc {
 			}
 		}
 
-		dp := metric.DataPoint{Time: ts, Value: req.Value}
-		if err := s.AddDataPoint(name, req.Unit, dp); err != nil {
-			writeError(w, http.StatusInternalServerError, err.Error())
-			return
-		}
-
-		w.WriteHeader(http.StatusCreated)
-		writeJSON(w, map[string]string{"status": "ok"})
-	}
-}
-
-type addItemReq struct {
-	Name  string  `json:"name"`
-	Value float64 `json:"value"`
-	Date  string  `json:"date"`
-	Unit  string  `json:"unit"`
-}
-
-func apiAddItem(s store.Store) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		metricName := r.PathValue("name")
-
-		var req addItemReq
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			writeError(w, http.StatusBadRequest, "invalid JSON: "+err.Error())
-			return
-		}
-
-		if req.Name == "" {
-			writeError(w, http.StatusBadRequest, "item name is required")
-			return
-		}
-
-		ts := time.Now()
-		if req.Date != "" {
-			var err error
-			ts, err = time.ParseInLocation("2006-01-02", req.Date, time.Local)
-			if err != nil {
-				writeError(w, http.StatusBadRequest, "invalid date: "+err.Error())
-				return
-			}
-		}
-
-		item := metric.Item{Name: req.Name, Value: req.Value}
-		if err := s.AddItemToDay(metricName, req.Unit, item, ts); err != nil {
+		dp := metric.DataPoint{Time: ts, Value: req.Value, Labels: req.Labels}
+		if err := s.AddDataPoint(name, dp); err != nil {
 			writeError(w, http.StatusInternalServerError, err.Error())
 			return
 		}

@@ -16,12 +16,13 @@ var getCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Printf("%s (%s)\n", m.Name, m.Unit)
+		fmt.Println(m.Name)
 		for _, dp := range m.DataPoints {
-			fmt.Printf("  %s  %.2f\n", dp.Time.Format("2006-01-02 15:04"), dp.Value)
-			for _, item := range dp.Items {
-				fmt.Printf("    - %s: %.2f\n", item.Name, item.Value)
+			fmt.Printf("  %s  %.2f", dp.Time.Format("2006-01-02 15:04"), dp.Value)
+			for k, v := range dp.Labels {
+				fmt.Printf("  %s=%s", k, v)
 			}
+			fmt.Println()
 		}
 		return nil
 	},
