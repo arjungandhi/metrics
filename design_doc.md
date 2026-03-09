@@ -1,22 +1,18 @@
 # Health Design Doc
 
-## Things that need tracking
-1. Calories
-2. Weight
-3. Fitness
-   a. Strength
-   b. Flexibility
-   c. Endurances
+## Requirements
+1. Track key health metrics over time
+  - examples: weight, calories, sleep, cholesterol, blood pressure, etc.
+2. goals
+  - A goal is a thing we want to achieve defined by one or more metrics, a target value, and a time frame.
+3. support multiple users
 
 
 ## System Device
 
 ## Interface
-cli based on bonzai
-
-## Commands
-- health add <type> <value> [<date>]
-- health view
+cli based on cobra
+web interface (visualization and basic data entry only)
 
 ## Data Flow
 
@@ -24,7 +20,7 @@ cli based on bonzai
 graph TD
 A[Manual Input]
 B[Automatic Input]
-C[File on Device]
+C[Store Interface] 
 D[Visualizations]
 
 A --> C
@@ -41,10 +37,16 @@ C --> D
    - Examples: Fitness trackers, Smart scales.
 
 ## Architecture
-each type can be defined as a module. 
+each metric can be defined as follows. 
 
-Modules define the following 
+Metrics define the following 
 - data input
-- data storage (common location
+- data serialization
 - data visualization
-- data instruction (next step)
+
+Goals are defined as follows
+- target metric
+- target value
+- start date
+- end date
+- progress tracking (current value, percentage complete)
