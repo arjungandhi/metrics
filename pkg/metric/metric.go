@@ -2,25 +2,59 @@ package metric
 
 import "time"
 
-// Item represents a named component of a data point (e.g. a food in a meal)
+// Item is a named component of a data point (e.g. a food in a meal).
 type Item struct {
 	Name  string  `json:"name"`
 	Value float64 `json:"value"`
 }
 
 // DataPoint is a single timestamped measurement.
-// For simple metrics (weight), just use Value.
-// For composite metrics (calories), use Items to break it down (e.g. foods in a meal)
-// and Value holds the total.
+// Items optionally breaks down composite metrics (e.g. foods in a meal);
+// Value holds the total.
 type DataPoint struct {
 	Time  time.Time `json:"time"`
 	Value float64   `json:"value"`
 	Items []Item    `json:"items,omitempty"`
 }
 
-// Metric is a named health metric with its recorded data points
 type Metric struct {
 	Name       string      `json:"name"`
 	Unit       string      `json:"unit"`
 	DataPoints []DataPoint `json:"data_points"`
+}
+
+// AddItem adds an item to the data point for the given day, creating one if needed.
+// The item's value is accumulated into the day's total.
+func (m *Metric) AddItem(item Item, ts time.Time) {
+	today := time.Date(ts.Year(), ts.Month(), ts.Day(), 0, 0, 0, 0, ts.Location())
+	tomorrow := today.AddDate(0, 0, 1)
+
+	for i := range m.DataPoints {
+		dp := &m.DataPoints[i]
+		if !dp.Time.Before(today) && dp.Time.Before(tomorrow) {
+			dp.Items = append(dp.Items, item)
+			dp.Value += item.Value
+			return
+		}
+	}
+
+	m.DataPoints = append(m.DataPoints, DataPoint{
+		Time:  ts,
+		Value: item.Value,
+		Items: []Item{item},
+	})
+}
+
+// FilterRange returns a copy of the metric containing only data points within [start, end].
+func (m *Metric) FilterRange(start, end time.Time) *Metric {
+	filtered := &Metric{
+		Name: m.Name,
+		Unit: m.Unit,
+	}
+	for _, dp := range m.DataPoints {
+		if !dp.Time.Before(start) && !dp.Time.After(end) {
+			filtered.DataPoints = append(filtered.DataPoints, dp)
+		}
+	}
+	return filtered
 }

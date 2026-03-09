@@ -8,28 +8,31 @@ import (
 	"github.com/arjungandhi/health/pkg/metric"
 )
 
-// MemoryStore is an in-memory implementation of Store
 type MemoryStore struct {
 	mu      sync.RWMutex
 	metrics map[string]*metric.Metric
 }
 
-// NewMemoryStore creates a new empty MemoryStore
 func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
 		metrics: make(map[string]*metric.Metric),
 	}
 }
 
+func (s *MemoryStore) getOrCreate(name, unit string) *metric.Metric {
+	m, ok := s.metrics[name]
+	if !ok {
+		m = &metric.Metric{Name: name, Unit: unit}
+		s.metrics[name] = m
+	}
+	return m
+}
+
 func (s *MemoryStore) AddDataPoint(metricName string, unit string, dp metric.DataPoint) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	m, ok := s.metrics[metricName]
-	if !ok {
-		m = &metric.Metric{Name: metricName, Unit: unit}
-		s.metrics[metricName] = m
-	}
+	m := s.getOrCreate(metricName, unit)
 	m.DataPoints = append(m.DataPoints, dp)
 	return nil
 }
@@ -38,29 +41,8 @@ func (s *MemoryStore) AddItemToDay(metricName string, unit string, item metric.I
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	m, ok := s.metrics[metricName]
-	if !ok {
-		m = &metric.Metric{Name: metricName, Unit: unit}
-		s.metrics[metricName] = m
-	}
-
-	today := time.Date(ts.Year(), ts.Month(), ts.Day(), 0, 0, 0, 0, ts.Location())
-	tomorrow := today.AddDate(0, 0, 1)
-
-	for i := range m.DataPoints {
-		dp := &m.DataPoints[i]
-		if !dp.Time.Before(today) && dp.Time.Before(tomorrow) {
-			dp.Items = append(dp.Items, item)
-			dp.Value += item.Value
-			return nil
-		}
-	}
-
-	m.DataPoints = append(m.DataPoints, metric.DataPoint{
-		Time:  ts,
-		Value: item.Value,
-		Items: []metric.Item{item},
-	})
+	m := s.getOrCreate(metricName, unit)
+	m.AddItem(item, ts)
 	return nil
 }
 
@@ -70,7 +52,7 @@ func (s *MemoryStore) GetMetric(name string) (*metric.Metric, error) {
 
 	m, ok := s.metrics[name]
 	if !ok {
-		return nil, fmt.Errorf("metric %q not found", name)
+		return nil, fmt.Errorf("metric %q: %w", name, ErrNotFound)
 	}
 	return m, nil
 }
@@ -81,19 +63,9 @@ func (s *MemoryStore) GetMetricRange(name string, start, end time.Time) (*metric
 
 	m, ok := s.metrics[name]
 	if !ok {
-		return nil, fmt.Errorf("metric %q not found", name)
+		return nil, fmt.Errorf("metric %q: %w", name, ErrNotFound)
 	}
-
-	filtered := &metric.Metric{
-		Name: m.Name,
-		Unit: m.Unit,
-	}
-	for _, dp := range m.DataPoints {
-		if !dp.Time.Before(start) && !dp.Time.After(end) {
-			filtered.DataPoints = append(filtered.DataPoints, dp)
-		}
-	}
-	return filtered, nil
+	return m.FilterRange(start, end), nil
 }
 
 func (s *MemoryStore) ListMetrics() ([]string, error) {

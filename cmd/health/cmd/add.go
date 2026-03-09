@@ -26,10 +26,9 @@ var addCmd = &cobra.Command{
 			return fmt.Errorf("invalid value %q: %w", args[1], err)
 		}
 
-		// Parse --day flag if provided
 		var ts time.Time
 		if day != "" {
-			ts, err = time.ParseInLocation("2006-01-02", day, time.Now().Location())
+			ts, err = time.ParseInLocation("2006-01-02", day, time.Local)
 			if err != nil {
 				return fmt.Errorf("invalid day %q (expected YYYY-MM-DD): %w", day, err)
 			}
@@ -38,7 +37,6 @@ var addCmd = &cobra.Command{
 		}
 
 		if itemName != "" {
-			// Item mode: accumulate into today's (or specified day's) data point
 			item := metric.Item{Name: itemName, Value: value}
 			if err := s.AddItemToDay(name, unit, item, ts); err != nil {
 				return err

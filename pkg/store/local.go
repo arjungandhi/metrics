@@ -11,14 +11,12 @@ import (
 	"github.com/arjungandhi/health/pkg/metric"
 )
 
-// LocalStore persists metrics as JSON files in a directory.
-// Each metric is stored as <dir>/<metric_name>.json.
+// LocalStore persists metrics as JSON files under a directory.
 type LocalStore struct {
 	dir string
 }
 
-// NewLocalStore creates a LocalStore using the HEALTH_DIR env var.
-// Creates the directory if it doesn't exist.
+// NewLocalStore creates a LocalStore using HEALTH_DIR or ~/.local/share/health.
 func NewLocalStore() (*LocalStore, error) {
 	dir := os.Getenv("HEALTH_DIR")
 	if dir == "" {
@@ -44,7 +42,7 @@ func (s *LocalStore) loadMetric(name string) (*metric.Metric, error) {
 	data, err := os.ReadFile(s.metricPath(name))
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("metric %q not found", name)
+			return nil, fmt.Errorf("metric %q: %w", name, ErrNotFound)
 		}
 		return nil, err
 	}
@@ -67,7 +65,6 @@ func (s *LocalStore) saveMetric(m *metric.Metric) error {
 func (s *LocalStore) AddDataPoint(metricName string, unit string, dp metric.DataPoint) error {
 	m, err := s.loadMetric(metricName)
 	if err != nil {
-		// metric doesn't exist yet, create it
 		m = &metric.Metric{Name: metricName, Unit: unit}
 	}
 
@@ -81,29 +78,7 @@ func (s *LocalStore) AddItemToDay(metricName string, unit string, item metric.It
 		m = &metric.Metric{Name: metricName, Unit: unit}
 	}
 
-	today := time.Date(ts.Year(), ts.Month(), ts.Day(), 0, 0, 0, 0, ts.Location())
-	tomorrow := today.AddDate(0, 0, 1)
-
-	// Find today's data point
-	found := false
-	for i := range m.DataPoints {
-		dp := &m.DataPoints[i]
-		if !dp.Time.Before(today) && dp.Time.Before(tomorrow) {
-			dp.Items = append(dp.Items, item)
-			dp.Value += item.Value
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		m.DataPoints = append(m.DataPoints, metric.DataPoint{
-			Time:  ts,
-			Value: item.Value,
-			Items: []metric.Item{item},
-		})
-	}
-
+	m.AddItem(item, ts)
 	return s.saveMetric(m)
 }
 
@@ -116,17 +91,7 @@ func (s *LocalStore) GetMetricRange(name string, start, end time.Time) (*metric.
 	if err != nil {
 		return nil, err
 	}
-
-	filtered := &metric.Metric{
-		Name: m.Name,
-		Unit: m.Unit,
-	}
-	for _, dp := range m.DataPoints {
-		if !dp.Time.Before(start) && !dp.Time.After(end) {
-			filtered.DataPoints = append(filtered.DataPoints, dp)
-		}
-	}
-	return filtered, nil
+	return m.FilterRange(start, end), nil
 }
 
 func (s *LocalStore) ListMetrics() ([]string, error) {
