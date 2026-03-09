@@ -23,6 +23,14 @@ func NewLocalStore(dir string) (*LocalStore, error) {
 	return &LocalStore{dir: dir}, nil
 }
 
+func (s *LocalStore) configDir() string {
+	return filepath.Join(s.dir, "config")
+}
+
+func (s *LocalStore) configPath(key string) string {
+	return filepath.Join(s.configDir(), key+".json")
+}
+
 func (s *LocalStore) metricPath(name string) string {
 	return filepath.Join(s.dir, name+".json")
 }
@@ -68,6 +76,35 @@ func (s *LocalStore) GetMetric(name string) (*metric.Metric, error) {
 	return s.loadMetric(name)
 }
 
+func (s *LocalStore) SetConfig(key string, value json.RawMessage) error {
+	if err := os.MkdirAll(s.configDir(), 0755); err != nil {
+		return fmt.Errorf("creating config dir: %w", err)
+	}
+	return os.WriteFile(s.configPath(key), value, 0644)
+}
+
+func (s *LocalStore) GetConfig(key string) (json.RawMessage, error) {
+	data, err := os.ReadFile(s.configPath(key))
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, fmt.Errorf("config %q: %w", key, ErrConfigNotFound)
+		}
+		return nil, err
+	}
+	return json.RawMessage(data), nil
+}
+
+func (s *LocalStore) DeleteConfig(key string) error {
+	err := os.Remove(s.configPath(key))
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return fmt.Errorf("config %q: %w", key, ErrConfigNotFound)
+		}
+		return err
+	}
+	return nil
+}
+
 func (s *LocalStore) ListMetrics() ([]string, error) {
 	entries, err := os.ReadDir(s.dir)
 	if err != nil {
@@ -76,7 +113,10 @@ func (s *LocalStore) ListMetrics() ([]string, error) {
 
 	var names []string
 	for _, e := range entries {
-		if !e.IsDir() && strings.HasSuffix(e.Name(), ".json") {
+		if e.IsDir() {
+			continue
+		}
+		if strings.HasSuffix(e.Name(), ".json") {
 			names = append(names, strings.TrimSuffix(e.Name(), ".json"))
 		}
 	}

@@ -1,6 +1,7 @@
 package store
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 
@@ -10,11 +11,13 @@ import (
 type MemoryStore struct {
 	mu      sync.RWMutex
 	metrics map[string]*metric.Metric
+	config  map[string]json.RawMessage
 }
 
 func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
 		metrics: make(map[string]*metric.Metric),
+		config:  make(map[string]json.RawMessage),
 	}
 }
 
@@ -47,6 +50,34 @@ func (s *MemoryStore) GetMetric(name string) (*metric.Metric, error) {
 	}
 	copy(cp.DataPoints, m.DataPoints)
 	return cp, nil
+}
+
+func (s *MemoryStore) SetConfig(key string, value json.RawMessage) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.config[key] = append(json.RawMessage(nil), value...)
+	return nil
+}
+
+func (s *MemoryStore) GetConfig(key string) (json.RawMessage, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	v, ok := s.config[key]
+	if !ok {
+		return nil, fmt.Errorf("config %q: %w", key, ErrConfigNotFound)
+	}
+	cp := append(json.RawMessage(nil), v...)
+	return cp, nil
+}
+
+func (s *MemoryStore) DeleteConfig(key string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, ok := s.config[key]; !ok {
+		return fmt.Errorf("config %q: %w", key, ErrConfigNotFound)
+	}
+	delete(s.config, key)
+	return nil
 }
 
 func (s *MemoryStore) ListMetrics() ([]string, error) {

@@ -29,6 +29,10 @@ func NewSQLStore(dsn string) (*SQLStore, error) {
 			labels     TEXT
 		);
 		CREATE INDEX IF NOT EXISTS idx_data_points_metric ON data_points(metric);
+		CREATE TABLE IF NOT EXISTS config (
+			key   TEXT PRIMARY KEY,
+			value TEXT NOT NULL
+		);
 	`); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("creating schema: %w", err)
@@ -100,6 +104,38 @@ func (s *SQLStore) GetMetric(name string) (*metric.Metric, error) {
 		return nil, fmt.Errorf("metric %q: %w", name, ErrNotFound)
 	}
 	return m, rows.Err()
+}
+
+func (s *SQLStore) SetConfig(key string, value json.RawMessage) error {
+	_, err := s.db.Exec(
+		`INSERT INTO config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+		key, string(value),
+	)
+	return err
+}
+
+func (s *SQLStore) GetConfig(key string) (json.RawMessage, error) {
+	var raw string
+	err := s.db.QueryRow(`SELECT value FROM config WHERE key = ?`, key).Scan(&raw)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("config %q: %w", key, ErrConfigNotFound)
+		}
+		return nil, err
+	}
+	return json.RawMessage(raw), nil
+}
+
+func (s *SQLStore) DeleteConfig(key string) error {
+	res, err := s.db.Exec(`DELETE FROM config WHERE key = ?`, key)
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return fmt.Errorf("config %q: %w", key, ErrConfigNotFound)
+	}
+	return nil
 }
 
 func (s *SQLStore) ListMetrics() ([]string, error) {
