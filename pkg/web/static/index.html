@@ -43,7 +43,7 @@
     <!-- Sidebar -->
     <aside class="bg-nord1 border-b md:border-b-0 md:border-r border-nord3 flex flex-col">
       <h1 class="text-lg font-semibold px-5 py-5 border-b border-nord3 text-nord6">Health</h1>
-      <h2 class="text-[11px] uppercase tracking-widest text-nord3 px-5 pt-5 pb-2">Metrics</h2>
+      <h2 class="text-[11px] uppercase tracking-widest text-nord4 px-5 pt-5 pb-2">Metrics</h2>
       <ul id="metricList" class="flex-1 overflow-y-auto md:max-h-none max-h-40">
         <li class="px-5 py-2.5 text-sm text-nord3 italic">Loading...</li>
       </ul>
@@ -76,19 +76,19 @@
       <form id="addForm" onsubmit="submitEntry(event)">
         <div class="grid grid-cols-2 gap-3 mb-4">
           <div>
-            <label class="block text-[11px] uppercase tracking-wider text-nord3 mb-1.5">Metric</label>
+            <label class="block text-[11px] uppercase tracking-wider text-nord4 mb-1.5">Metric</label>
             <input type="text" id="entryMetric" required placeholder="e.g. weight"
               class="w-full px-3 py-2.5 bg-nord0 border border-nord3 rounded-md text-nord4 text-sm outline-none focus:border-nord8">
           </div>
           <div>
-            <label class="block text-[11px] uppercase tracking-wider text-nord3 mb-1.5">Unit</label>
+            <label class="block text-[11px] uppercase tracking-wider text-nord4 mb-1.5">Unit</label>
             <input type="text" id="entryUnit" placeholder="e.g. lbs"
               class="w-full px-3 py-2.5 bg-nord0 border border-nord3 rounded-md text-nord4 text-sm outline-none focus:border-nord8">
           </div>
         </div>
 
         <div id="simpleFields" class="mb-4">
-          <label class="block text-[11px] uppercase tracking-wider text-nord3 mb-1.5">Value</label>
+          <label class="block text-[11px] uppercase tracking-wider text-nord4 mb-1.5">Value</label>
           <input type="number" id="entryValue" step="any" required placeholder="0"
             class="w-full px-3 py-2.5 bg-nord0 border border-nord3 rounded-md text-nord4 text-sm outline-none focus:border-nord8">
         </div>
@@ -96,12 +96,12 @@
         <div id="itemFields" class="hidden mb-4">
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-[11px] uppercase tracking-wider text-nord3 mb-1.5">Item Name</label>
+              <label class="block text-[11px] uppercase tracking-wider text-nord4 mb-1.5">Item Name</label>
               <input type="text" id="itemName" placeholder="e.g. chicken breast"
                 class="w-full px-3 py-2.5 bg-nord0 border border-nord3 rounded-md text-nord4 text-sm outline-none focus:border-nord8">
             </div>
             <div>
-              <label class="block text-[11px] uppercase tracking-wider text-nord3 mb-1.5">Value</label>
+              <label class="block text-[11px] uppercase tracking-wider text-nord4 mb-1.5">Value</label>
               <input type="number" id="itemValue" step="any" placeholder="0"
                 class="w-full px-3 py-2.5 bg-nord0 border border-nord3 rounded-md text-nord4 text-sm outline-none focus:border-nord8">
             </div>
@@ -109,7 +109,7 @@
         </div>
 
         <div class="mb-6">
-          <label class="block text-[11px] uppercase tracking-wider text-nord3 mb-1.5">Date</label>
+          <label class="block text-[11px] uppercase tracking-wider text-nord4 mb-1.5">Date</label>
           <input type="date" id="entryDate"
             class="w-full px-3 py-2.5 bg-nord0 border border-nord3 rounded-md text-nord4 text-sm outline-none focus:border-nord8">
         </div>
@@ -178,7 +178,7 @@
       main.innerHTML = `
         <div class="flex items-baseline gap-3 mb-6">
           <h2 class="text-2xl font-semibold text-nord6">${m.name}</h2>
-          <span class="text-sm text-nord3">${m.unit || ''}</span>
+          <span class="text-sm text-nord4">${m.unit || ''}</span>
         </div>
         <div class="bg-nord1 border border-nord3 rounded-xl p-6 mb-6 h-80">
           <canvas id="metricChart"></canvas>
@@ -187,9 +187,9 @@
           <table class="w-full">
             <thead>
               <tr>
-                <th class="text-left px-4 py-3 bg-nord0 text-nord3 text-[11px] uppercase tracking-wider font-medium">Date</th>
-                <th class="text-left px-4 py-3 bg-nord0 text-nord3 text-[11px] uppercase tracking-wider font-medium">Value</th>
-                <th class="text-left px-4 py-3 bg-nord0 text-nord3 text-[11px] uppercase tracking-wider font-medium">Details</th>
+                <th class="text-left px-4 py-3 bg-nord0 text-nord4 text-[11px] uppercase tracking-wider font-medium">Date</th>
+                <th class="text-left px-4 py-3 bg-nord0 text-nord4 text-[11px] uppercase tracking-wider font-medium">Value</th>
+                <th class="text-left px-4 py-3 bg-nord0 text-nord4 text-[11px] uppercase tracking-wider font-medium">Details</th>
               </tr>
             </thead>
             <tbody>
@@ -198,8 +198,8 @@
                   <td class="px-4 py-2.5 text-sm text-nord4">${new Date(dp.time).toLocaleDateString()}</td>
                   <td class="px-4 py-2.5 text-sm text-nord4">${dp.value}${m.unit ? ' ' + m.unit : ''}</td>
                   <td class="px-4 py-2.5 text-sm">${(dp.items || []).length > 0
-                    ? `<span class="text-xs text-nord3">${dp.items.map(i => i.name + ': ' + i.value).join(', ')}</span>`
-                    : '<span class="text-nord3">-</span>'
+                    ? `<span class="text-xs text-nord4">${dp.items.map(i => i.name + ': ' + i.value).join(', ')}</span>`
+                    : '<span class="text-nord4">-</span>'
                   }</td>
                 </tr>
               `).join('')}
@@ -238,12 +238,12 @@
               type: 'time',
               time: { unit: 'day', tooltipFormat: 'MMM d, yyyy' },
               grid: { color: '#3B4252' },               // nord1
-              ticks: { color: '#4C566A' },              // nord3
+              ticks: { color: '#D8DEE9' },              // nord4
             },
             y: {
               title: { display: !!unit, text: unit, color: '#D8DEE9' }, // nord4
               grid: { color: '#3B4252' },               // nord1
-              ticks: { color: '#4C566A' },              // nord3
+              ticks: { color: '#D8DEE9' },              // nord4
             },
           },
           plugins: {
