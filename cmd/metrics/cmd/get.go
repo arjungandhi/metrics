@@ -7,21 +7,12 @@ import (
 )
 
 var getCmd = &cobra.Command{
-	Use:   "get <metric>",
-	Short: "Get data points for a metric",
-	Args: cobra.ExactArgs(1),
-	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		if len(args) != 0 {
-			return nil, cobra.ShellCompDirectiveNoFileComp
-		}
-		names, err := s.ListMetrics()
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveError
-		}
-		return names, cobra.ShellCompDirectiveNoFileComp
-	},
+	Use:               "get <metric>",
+	Short:             "Get data points for a metric",
+	Args:              cobra.ExactArgs(1),
+	ValidArgsFunction: completeMetricNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		m, err := s.GetMetric(args[0])
+		m, err := client.Get(args[0])
 		if err != nil {
 			return err
 		}

@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/arjungandhi/metrics/pkg/metric"
 	"github.com/spf13/cobra"
 )
 
@@ -16,19 +15,10 @@ var (
 )
 
 var addCmd = &cobra.Command{
-	Use:   "add <metric> <value>",
-	Short: "Add a data point to a metric",
-	Args:  cobra.ExactArgs(2),
-	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		if len(args) != 0 {
-			return nil, cobra.ShellCompDirectiveNoFileComp
-		}
-		names, err := s.ListMetrics()
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveError
-		}
-		return names, cobra.ShellCompDirectiveNoFileComp
-	},
+	Use:               "add <metric> <value>",
+	Short:             "Add a data point to a metric",
+	Args:              cobra.ExactArgs(2),
+	ValidArgsFunction: completeMetricNames,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
 		value, err := strconv.ParseFloat(args[1], 64)
@@ -51,16 +41,10 @@ var addCmd = &cobra.Command{
 			return err
 		}
 
-		dp := metric.DataPoint{
-			Time:   ts,
-			Value:  value,
-			Labels: labels,
-		}
-		if err := s.AddDataPoint(name, dp); err != nil {
+		if err := client.AddAt(name, value, ts, labels); err != nil {
 			return err
 		}
 		fmt.Printf("Added %.2f to %s\n", value, name)
-
 		return nil
 	},
 }

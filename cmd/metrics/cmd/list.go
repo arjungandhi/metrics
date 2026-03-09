@@ -10,7 +10,7 @@ var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all tracked metrics",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		names, err := s.ListMetrics()
+		names, err := client.List()
 		if err != nil {
 			return err
 		}
