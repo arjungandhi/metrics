@@ -23,11 +23,15 @@ var rootCmd = &cobra.Command{
 			dir = filepath.Join(home, ".local", "share", "metrics")
 		}
 
-		ls, err := store.NewLocalStore(dir)
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+
+		ss, err := store.NewSQLStore(filepath.Join(dir, "metrics.db"))
 		if err != nil {
 			return err
 		}
-		s = ls
+		s = ss
 		return nil
 	},
 }
