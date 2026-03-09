@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Update vendorHash in flake.nix when go.mod/go.sum change
+if git diff --cached --name-only | grep -qE '^go\.(mod|sum)$'; then
+    echo "go.mod/go.sum changed — updating vendorHash in flake.nix..."
+    just update-vendor-hash
+    git add flake.nix
+fi
