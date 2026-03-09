@@ -61,5 +61,5 @@ func init() {
 	addCmd.Flags().StringVarP(&unit, "unit", "u", "", "unit of measurement (e.g. lbs, kcal, hours)")
 	addCmd.Flags().StringVarP(&itemName, "item", "i", "", "item name (accumulates into the day's data point)")
 	addCmd.Flags().StringVarP(&day, "day", "d", "", "date for the entry (YYYY-MM-DD, defaults to today)")
-	rootCmd.AddCommand(addCmd)
+	metricCmd.AddCommand(addCmd)
 }

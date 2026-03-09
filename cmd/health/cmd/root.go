@@ -3,16 +3,53 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/arjungandhi/health/pkg/store"
 	"github.com/spf13/cobra"
 )
 
-var s store.Store
+var (
+	s        store.Store
+	userFlag string
+)
 
 var rootCmd = &cobra.Command{
 	Use:   "health",
 	Short: "Track health metrics from the command line",
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// Init store for all commands.
+		dir := os.Getenv("HEALTH_DIR")
+		if dir == "" {
+			home, err := os.UserHomeDir()
+			if err != nil {
+				return err
+			}
+			dir = filepath.Join(home, ".local", "share", "health")
+		}
+
+		ls, err := store.NewLocalStore(dir)
+		if err != nil {
+			return err
+		}
+		s = ls
+
+		// User subcommands manage users directly, don't require an active user.
+		if cmd.Parent() == userCmd || cmd == userCmd {
+			return nil
+		}
+
+		// Resolve active user.
+		username := userFlag
+		if username == "" {
+			username, err = s.DefaultUser()
+			if err != nil {
+				return fmt.Errorf("%w\nRun 'health user add <name>' to create a user", err)
+			}
+		}
+
+		return s.SetUser(username)
+	},
 }
 
 func Execute() error {
@@ -20,10 +57,5 @@ func Execute() error {
 }
 
 func init() {
-	ls, err := store.NewLocalStore()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "error:", err)
-		os.Exit(1)
-	}
-	s = ls
+	rootCmd.PersistentFlags().StringVar(&userFlag, "user", "", "user profile to use (overrides default)")
 }
