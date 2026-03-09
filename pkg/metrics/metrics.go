@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -30,12 +31,25 @@ func New(cfg *config.Config) (*Client, error) {
 		return nil, err
 	}
 
-	s, err := store.NewSQLStore(filepath.Join(cfg.Dir, "metrics.db"))
+	s, err := openStore(cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Client{Store: s, Config: cfg}, nil
+}
+
+func openStore(cfg *config.Config) (store.Store, error) {
+	switch cfg.Store {
+	case config.StoreSQL, "":
+		return store.NewSQLStore(filepath.Join(cfg.Dir, "metrics.db"))
+	case config.StoreLocal:
+		return store.NewLocalStore(cfg.Dir)
+	case config.StoreMemory:
+		return store.NewMemoryStore(), nil
+	default:
+		return nil, fmt.Errorf("unknown store type: %q", cfg.Store)
+	}
 }
 
 // Close releases resources held by the client.
