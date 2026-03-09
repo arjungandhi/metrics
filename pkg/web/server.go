@@ -65,7 +65,8 @@ func apiGetMetric(s store.Store) http.HandlerFunc {
 		var m *metric.Metric
 		var err error
 
-		if startStr != "" && endStr != "" {
+		m, err = s.GetMetric(name)
+		if err == nil && startStr != "" && endStr != "" {
 			start, e1 := time.ParseInLocation("2006-01-02", startStr, time.Local)
 			end, e2 := time.ParseInLocation("2006-01-02", endStr, time.Local)
 			if e1 != nil || e2 != nil {
@@ -73,9 +74,7 @@ func apiGetMetric(s store.Store) http.HandlerFunc {
 				return
 			}
 			end = end.Add(24*time.Hour - time.Nanosecond)
-			m, err = s.GetMetricRange(name, start, end)
-		} else {
-			m, err = s.GetMetric(name)
+			m = m.FilterRange(start, end)
 		}
 
 		if err != nil {
@@ -92,7 +91,7 @@ func apiGetMetric(s store.Store) http.HandlerFunc {
 
 type addDataPointReq struct {
 	Value  float64           `json:"value"`
-	Date   string            `json:"date"` // YYYY-MM-DD, optional
+	Date   string            `json:"date,omitempty"`
 	Labels map[string]string `json:"labels,omitempty"`
 }
 

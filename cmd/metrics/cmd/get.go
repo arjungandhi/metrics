@@ -39,5 +39,5 @@ var getCmd = &cobra.Command{
 }
 
 func init() {
-	metricCmd.AddCommand(getCmd)
+	rootCmd.AddCommand(getCmd)
 }

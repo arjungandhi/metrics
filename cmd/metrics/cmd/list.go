@@ -28,5 +28,5 @@ var listCmd = &cobra.Command{
 }
 
 func init() {
-	metricCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(listCmd)
 }

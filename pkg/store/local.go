@@ -8,12 +8,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/arjungandhi/metrics/pkg/metric"
 )
 
-// LocalStore persists metrics as JSON files under <dir>/<metric>.json.
 type LocalStore struct {
 	dir string
 }
@@ -68,14 +66,6 @@ func (s *LocalStore) AddDataPoint(metricName string, dp metric.DataPoint) error 
 
 func (s *LocalStore) GetMetric(name string) (*metric.Metric, error) {
 	return s.loadMetric(name)
-}
-
-func (s *LocalStore) GetMetricRange(name string, start, end time.Time) (*metric.Metric, error) {
-	m, err := s.loadMetric(name)
-	if err != nil {
-		return nil, err
-	}
-	return m.FilterRange(start, end), nil
 }
 
 func (s *LocalStore) ListMetrics() ([]string, error) {

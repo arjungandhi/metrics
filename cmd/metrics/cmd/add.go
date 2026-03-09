@@ -83,5 +83,5 @@ func parseLabels(flags []string) (map[string]string, error) {
 func init() {
 	addCmd.Flags().StringVarP(&day, "day", "d", "", "date for the entry (YYYY-MM-DD, defaults to today)")
 	addCmd.Flags().StringArrayVarP(&labelFlags, "label", "l", nil, "label in key=value format (repeatable)")
-	metricCmd.AddCommand(addCmd)
+	rootCmd.AddCommand(addCmd)
 }

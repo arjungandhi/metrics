@@ -3,7 +3,6 @@ package store
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/arjungandhi/metrics/pkg/metric"
 )
@@ -41,18 +40,13 @@ func (s *MemoryStore) GetMetric(name string) (*metric.Metric, error) {
 	if !ok {
 		return nil, fmt.Errorf("metric %q: %w", name, ErrNotFound)
 	}
-	return m, nil
-}
 
-func (s *MemoryStore) GetMetricRange(name string, start, end time.Time) (*metric.Metric, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	m, ok := s.metrics[name]
-	if !ok {
-		return nil, fmt.Errorf("metric %q: %w", name, ErrNotFound)
+	cp := &metric.Metric{
+		Name:       m.Name,
+		DataPoints: make([]metric.DataPoint, len(m.DataPoints)),
 	}
-	return m.FilterRange(start, end), nil
+	copy(cp.DataPoints, m.DataPoints)
+	return cp, nil
 }
 
 func (s *MemoryStore) ListMetrics() ([]string, error) {
