@@ -22,7 +22,7 @@
           pname = "metrics";
           version = "0.1.0";
           src = ./.;
-          vendorHash = "sha256-qOWInVJQ9t9rODdzpKeVeFhJhuR3gEa76TV1g9OD/lg=";
+          vendorHash = "sha256-2kUo4KtkmntEw39iefQygQLTgyESgaHEfT1TMj4vEt0=";
           subPackages = [ "cmd/metrics" ];
 
           meta = with pkgs.lib; {
