@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            // Polar Night – backgrounds
+            nord0:  '#2E3440',
+            nord1:  '#3B4252',
+            nord2:  '#434C5E',
+            nord3:  '#4C566A',
+            // Snow Storm – text / foreground
+            nord4:  '#D8DEE9',
+            nord5:  '#E5E9F0',
+            nord6:  '#ECEFF4',
+            // Frost – accent / interactive
+            nord7:  '#8FBCBB',
+            nord8:  '#88C0D0',
+            nord9:  '#81A1C1',
+            nord10: '#5E81AC',
+            // Aurora – semantic
+            nord11: '#BF616A',
+            nord12: '#D08770',
+            nord13: '#EBCB8B',
+            nord14: '#A3BE8C',
+            nord15: '#B48EAD',
+          },
+        },
+      },
+    }
+  </script>
+</head>
+<body class="bg-nord0 text-nord4 min-h-screen">
+  <div class="grid grid-cols-1 md:grid-cols-[240px_1fr] min-h-screen">
+    <!-- Sidebar -->
+    <aside class="bg-nord1 border-b md:border-b-0 md:border-r border-nord3 flex flex-col">
+      <h1 class="text-lg font-semibold px-5 py-5 border-b border-nord3 text-nord6">Health</h1>
+      <h2 class="text-[11px] uppercase tracking-widest text-nord3 px-5 pt-5 pb-2">Metrics</h2>
+      <ul id="metricList" class="flex-1 overflow-y-auto md:max-h-none max-h-40">
+        <li class="px-5 py-2.5 text-sm text-nord3 italic">Loading...</li>
+      </ul>
+      <div class="p-4 border-t border-nord3">
+        <button onclick="openAddModal()" class="w-full py-2 px-4 bg-nord8 hover:bg-nord7 text-nord0 text-sm font-medium rounded-md transition-colors">
+          + Add Entry
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="mainContent" class="p-6 md:p-8 overflow-y-auto">
+      <div class="flex flex-col items-center justify-center h-[60vh] text-nord3">
+        <p class="text-base">Select a metric or add a new entry to get started.</p>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add Entry Modal -->
+  <div id="addModal" class="hidden fixed inset-0 bg-black/60 z-50 items-center justify-center">
+    <div class="bg-nord1 border border-nord3 rounded-xl p-7 w-[420px] max-w-[90vw]">
+      <h3 class="text-lg font-semibold text-nord6 mb-5">Add Entry</h3>
+
+      <!-- Tabs -->
+      <div class="flex gap-1 mb-4 border-b border-nord3">
+        <button onclick="switchTab('simple')" class="tab-btn px-4 py-2 text-sm border-b-2 border-nord8 text-nord8 -mb-px">Data Point</button>
+        <button onclick="switchTab('item')" class="tab-btn px-4 py-2 text-sm border-b-2 border-transparent text-nord3 -mb-px">Item</button>
+      </div>
+
+      <form id="addForm" onsubmit="submitEntry(event)">
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-nord3 mb-1.5">Metric</label>
+            <input type="text" id="entryMetric" required placeholder="e.g. weight"
+              class="w-full px-3 py-2.5 bg-nord0 border border-nord3 rounded-md text-nord4 text-sm outline-none focus:border-nord8">
+          </div>
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-nord3 mb-1.5">Unit</label>
+            <input type="text" id="entryUnit" placeholder="e.g. lbs"
+              class="w-full px-3 py-2.5 bg-nord0 border border-nord3 rounded-md text-nord4 text-sm outline-none focus:border-nord8">
+          </div>
+        </div>
+
+        <div id="simpleFields" class="mb-4">
+          <label class="block text-[11px] uppercase tracking-wider text-nord3 mb-1.5">Value</label>
+          <input type="number" id="entryValue" step="any" required placeholder="0"
+            class="w-full px-3 py-2.5 bg-nord0 border border-nord3 rounded-md text-nord4 text-sm outline-none focus:border-nord8">
+        </div>
+
+        <div id="itemFields" class="hidden mb-4">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider text-nord3 mb-1.5">Item Name</label>
+              <input type="text" id="itemName" placeholder="e.g. chicken breast"
+                class="w-full px-3 py-2.5 bg-nord0 border border-nord3 rounded-md text-nord4 text-sm outline-none focus:border-nord8">
+            </div>
+            <div>
+              <label class="block text-[11px] uppercase tracking-wider text-nord3 mb-1.5">Value</label>
+              <input type="number" id="itemValue" step="any" placeholder="0"
+                class="w-full px-3 py-2.5 bg-nord0 border border-nord3 rounded-md text-nord4 text-sm outline-none focus:border-nord8">
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <label class="block text-[11px] uppercase tracking-wider text-nord3 mb-1.5">Date</label>
+          <input type="date" id="entryDate"
+            class="w-full px-3 py-2.5 bg-nord0 border border-nord3 rounded-md text-nord4 text-sm outline-none focus:border-nord8">
+        </div>
+
+        <div class="flex gap-2 justify-end">
+          <button type="button" onclick="closeAddModal()"
+            class="px-4 py-2 border border-nord3 rounded-md text-nord4 text-sm hover:bg-nord2 transition-colors">
+            Cancel
+          </button>
+          <button type="submit"
+            class="px-4 py-2 bg-nord8 hover:bg-nord7 text-nord0 text-sm font-medium rounded-md transition-colors">
+            Add
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let currentMetric = null;
+    let chart = null;
+    let entryMode = 'simple';
+
+    // Initialization
+    document.getElementById('entryDate').valueAsDate = new Date();
+    loadMetrics();
+
+    async function loadMetrics() {
+      const res = await fetch('/api/metrics');
+      const names = await res.json();
+      const list = document.getElementById('metricList');
+
+      if (names.length === 0) {
+        list.innerHTML = '<li class="px-5 py-2.5 text-sm text-nord3 italic">No metrics yet</li>';
+        return;
+      }
+
+      list.innerHTML = names.map(n =>
+        `<li class="px-5 py-2.5 text-sm cursor-pointer transition-colors ${
+          n === currentMetric
+            ? 'bg-nord8 text-nord0 font-medium'
+            : 'hover:bg-nord2 text-nord4'
+        }" onclick="selectMetric('${n}')">${n}</li>`
+      ).join('');
+    }
+
+    async function selectMetric(name) {
+      currentMetric = name;
+      loadMetrics();
+
+      const res = await fetch(`/api/metrics/${encodeURIComponent(name)}`);
+      if (!res.ok) {
+        document.getElementById('mainContent').innerHTML =
+          '<div class="flex items-center justify-center h-[60vh] text-nord3"><p>Failed to load metric.</p></div>';
+        return;
+      }
+
+      const metric = await res.json();
+      renderMetric(metric);
+    }
+
+    function renderMetric(m) {
+      const main = document.getElementById('mainContent');
+      const points = (m.data_points || []).sort((a, b) => new Date(a.time) - new Date(b.time));
+
+      main.innerHTML = `
+        <div class="flex items-baseline gap-3 mb-6">
+          <h2 class="text-2xl font-semibold text-nord6">${m.name}</h2>
+          <span class="text-sm text-nord3">${m.unit || ''}</span>
+        </div>
+        <div class="bg-nord1 border border-nord3 rounded-xl p-6 mb-6 h-80">
+          <canvas id="metricChart"></canvas>
+        </div>
+        <div class="bg-nord1 border border-nord3 rounded-xl overflow-hidden">
+          <table class="w-full">
+            <thead>
+              <tr>
+                <th class="text-left px-4 py-3 bg-nord0 text-nord3 text-[11px] uppercase tracking-wider font-medium">Date</th>
+                <th class="text-left px-4 py-3 bg-nord0 text-nord3 text-[11px] uppercase tracking-wider font-medium">Value</th>
+                <th class="text-left px-4 py-3 bg-nord0 text-nord3 text-[11px] uppercase tracking-wider font-medium">Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${points.slice().reverse().map(dp => `
+                <tr class="border-t border-nord3">
+                  <td class="px-4 py-2.5 text-sm text-nord4">${new Date(dp.time).toLocaleDateString()}</td>
+                  <td class="px-4 py-2.5 text-sm text-nord4">${dp.value}${m.unit ? ' ' + m.unit : ''}</td>
+                  <td class="px-4 py-2.5 text-sm">${(dp.items || []).length > 0
+                    ? `<span class="text-xs text-nord3">${dp.items.map(i => i.name + ': ' + i.value).join(', ')}</span>`
+                    : '<span class="text-nord3">-</span>'
+                  }</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      renderChart(m.name, m.unit, points);
+    }
+
+    function renderChart(name, unit, points) {
+      if (chart) chart.destroy();
+
+      const ctx = document.getElementById('metricChart').getContext('2d');
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          datasets: [{
+            label: name,
+            data: points.map(dp => ({ x: new Date(dp.time), y: dp.value })),
+            borderColor: '#88C0D0',                    // nord8 – primary accent
+            backgroundColor: 'rgba(136, 192, 208, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+            pointBackgroundColor: '#88C0D0',            // nord8
+            pointBorderColor: '#88C0D0',                // nord8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              type: 'time',
+              time: { unit: 'day', tooltipFormat: 'MMM d, yyyy' },
+              grid: { color: '#3B4252' },               // nord1
+              ticks: { color: '#4C566A' },              // nord3
+            },
+            y: {
+              title: { display: !!unit, text: unit, color: '#D8DEE9' }, // nord4
+              grid: { color: '#3B4252' },               // nord1
+              ticks: { color: '#4C566A' },              // nord3
+            },
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#3B4252',               // nord1
+              titleColor: '#ECEFF4',                    // nord6
+              bodyColor: '#D8DEE9',                     // nord4
+              borderColor: '#4C566A',                   // nord3
+              borderWidth: 1,
+            },
+          },
+        },
+      });
+    }
+
+    // Modal
+    function openAddModal() {
+      const modal = document.getElementById('addModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      if (currentMetric) {
+        document.getElementById('entryMetric').value = currentMetric;
+      }
+    }
+
+    function closeAddModal() {
+      const modal = document.getElementById('addModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function switchTab(mode) {
+      entryMode = mode;
+      document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+        if ((mode === 'simple' && i === 0) || (mode === 'item' && i === 1)) {
+          btn.className = 'tab-btn px-4 py-2 text-sm border-b-2 border-nord8 text-nord8 -mb-px';
+        } else {
+          btn.className = 'tab-btn px-4 py-2 text-sm border-b-2 border-transparent text-nord3 -mb-px';
+        }
+      });
+      document.getElementById('simpleFields').classList.toggle('hidden', mode !== 'simple');
+      document.getElementById('itemFields').classList.toggle('hidden', mode !== 'item');
+    }
+
+    async function submitEntry(e) {
+      e.preventDefault();
+
+      const metricName = document.getElementById('entryMetric').value.trim();
+      const unit = document.getElementById('entryUnit').value.trim();
+      const date = document.getElementById('entryDate').value;
+
+      if (entryMode === 'item') {
+        const name = document.getElementById('itemName').value.trim();
+        const value = parseFloat(document.getElementById('itemValue').value);
+        if (!name || isNaN(value)) return;
+
+        await fetch(`/api/metrics/${encodeURIComponent(metricName)}/items`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, value, date, unit }),
+        });
+      } else {
+        const value = parseFloat(document.getElementById('entryValue').value);
+        if (isNaN(value)) return;
+
+        await fetch(`/api/metrics/${encodeURIComponent(metricName)}/datapoints`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ value, date, unit }),
+        });
+      }
+
+      closeAddModal();
+      await loadMetrics();
+      selectMetric(metricName);
+    }
+
+    // Close modal on backdrop click
+    document.getElementById('addModal').addEventListener('click', function(e) {
+      if (e.target === this) closeAddModal();
+    });
+  </script>
+</body>
+</html>
