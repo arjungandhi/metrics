@@ -8,9 +8,8 @@ type Item struct {
 	Value float64 `json:"value"`
 }
 
-// DataPoint is a single timestamped measurement.
-// Items optionally breaks down composite metrics (e.g. foods in a meal);
-// Value holds the total.
+// DataPoint is a single timestamped measurement. Items optionally break down
+// the total into named components.
 type DataPoint struct {
 	Time  time.Time `json:"time"`
 	Value float64   `json:"value"`
@@ -23,8 +22,7 @@ type Metric struct {
 	DataPoints []DataPoint `json:"data_points"`
 }
 
-// AddItem adds an item to the data point for the given day, creating one if needed.
-// The item's value is accumulated into the day's total.
+// AddItem accumulates an item into the day's data point, creating one if needed.
 func (m *Metric) AddItem(item Item, ts time.Time) {
 	today := time.Date(ts.Year(), ts.Month(), ts.Day(), 0, 0, 0, 0, ts.Location())
 	tomorrow := today.AddDate(0, 0, 1)

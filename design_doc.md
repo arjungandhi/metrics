@@ -2,17 +2,11 @@
 
 ## Requirements
 1. Track key health metrics over time
-  - examples: weight, calories, sleep, cholesterol, blood pressure, etc.
+  - examples: weight, calories in the form of meals, sleep, cholesterol, blood pressure, etc.
 2. goals
   - A goal is a thing we want to achieve defined by one or more metrics, a target value, and a time frame.
 3. support multiple users
 
-
-## System Device
-
-## Interface
-cli based on cobra
-web interface (visualization and basic data entry only)
 
 ## Data Flow
 

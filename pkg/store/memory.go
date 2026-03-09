@@ -13,8 +13,7 @@ type MemoryStore struct {
 	mu          sync.RWMutex
 	users       []User
 	defaultUser string
-	user        string // active user
-	// metrics keyed by "user/metric"
+	user    string // active user
 	metrics map[string]*metric.Metric
 }
 

@@ -18,7 +18,6 @@ var rootCmd = &cobra.Command{
 	Use:   "health",
 	Short: "Track health metrics from the command line",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		// Init store for all commands.
 		dir := os.Getenv("HEALTH_DIR")
 		if dir == "" {
 			home, err := os.UserHomeDir()
@@ -34,12 +33,11 @@ var rootCmd = &cobra.Command{
 		}
 		s = ls
 
-		// User subcommands manage users directly, don't require an active user.
+		// User subcommands don't require an active user.
 		if cmd.Parent() == userCmd || cmd == userCmd {
 			return nil
 		}
 
-		// Resolve active user.
 		username := userFlag
 		if username == "" {
 			username, err = s.DefaultUser()

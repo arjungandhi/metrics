@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,18 +18,13 @@ type localConfig struct {
 	Users       []User `json:"users"`
 }
 
-// LocalStore persists metrics as JSON files on disk.
-// Layout:
-//
-//	<dir>/config.json
-//	<dir>/users/<name>/<metric>.json
+// LocalStore persists metrics as JSON files under <dir>/users/<name>/<metric>.json.
 type LocalStore struct {
 	dir  string
 	cfg  *localConfig
 	user string // active user
 }
 
-// NewLocalStore opens or creates a store rooted at dir.
 func NewLocalStore(dir string) (*LocalStore, error) {
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return nil, fmt.Errorf("creating store dir: %w", err)
@@ -48,7 +44,7 @@ func (s *LocalStore) configPath() string {
 func (s *LocalStore) loadConfig() error {
 	data, err := os.ReadFile(s.configPath())
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			s.cfg = &localConfig{}
 			return nil
 		}
@@ -76,7 +72,6 @@ func (s *LocalStore) AddUser(name string) error {
 		return fmt.Errorf("user %q: %w", name, ErrUserExists)
 	}
 	s.cfg.Users = append(s.cfg.Users, User{Name: name})
-	// First user becomes default.
 	if len(s.cfg.Users) == 1 {
 		s.cfg.DefaultUser = name
 	}
@@ -140,7 +135,7 @@ func (s *LocalStore) loadMetric(name string) (*metric.Metric, error) {
 
 	data, err := os.ReadFile(p)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			return nil, fmt.Errorf("metric %q: %w", name, ErrNotFound)
 		}
 		return nil, err
