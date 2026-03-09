@@ -19,6 +19,16 @@ var addCmd = &cobra.Command{
 	Use:   "add <metric> <value>",
 	Short: "Add a data point to a metric",
 	Args:  cobra.ExactArgs(2),
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		if len(args) != 0 {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+		names, err := s.ListMetrics()
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+		return names, cobra.ShellCompDirectiveNoFileComp
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]
 		value, err := strconv.ParseFloat(args[1], 64)
