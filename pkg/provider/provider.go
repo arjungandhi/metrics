@@ -9,6 +9,9 @@ type Provider interface {
 	// Name returns the unique name of the provider (e.g. "strava").
 	Name() string
 
+	// Metrics returns the list of metric names this provider writes.
+	Metrics() []string
+
 	// Setup performs interactive configuration (OAuth, API keys, etc.)
 	// and persists settings to the store.
 	Setup(s store.Store) error

@@ -106,6 +106,18 @@ func (s *SQLStore) GetMetric(name string) (*metric.Metric, error) {
 	return m, rows.Err()
 }
 
+func (s *SQLStore) DeleteMetric(name string) error {
+	res, err := s.db.Exec(`DELETE FROM data_points WHERE metric = ?`, name)
+	if err != nil {
+		return err
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		return fmt.Errorf("metric %q: %w", name, ErrNotFound)
+	}
+	return nil
+}
+
 func (s *SQLStore) SetConfig(key string, value json.RawMessage) error {
 	_, err := s.db.Exec(
 		`INSERT INTO config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`,

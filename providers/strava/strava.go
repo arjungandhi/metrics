@@ -42,6 +42,17 @@ func New() *Provider {
 
 func (p *Provider) Name() string { return "strava" }
 
+func (p *Provider) Metrics() []string {
+	return []string{
+		"strava.distance",
+		"strava.elevation",
+		"strava.moving_time",
+		"strava.average_speed",
+		"strava.max_speed",
+		"strava.activities",
+	}
+}
+
 // Setup walks the user through OAuth2 setup and stores credentials.
 func (p *Provider) Setup(s store.Store) error {
 	var clientID, clientSecret string

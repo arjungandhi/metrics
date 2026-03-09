@@ -14,6 +14,7 @@ type Store interface {
 	AddDataPoint(metricName string, dp metric.DataPoint) error
 	GetMetric(name string) (*metric.Metric, error)
 	ListMetrics() ([]string, error)
+	DeleteMetric(name string) error
 
 	// Config key-value storage for provider settings.
 	// Values are stored as JSON.

@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/arjungandhi/metrics/pkg/provider"
+	"github.com/arjungandhi/metrics/pkg/store"
 	"github.com/arjungandhi/metrics/providers/strava"
 	"github.com/spf13/cobra"
 )
@@ -77,9 +80,49 @@ var providerListCmd = &cobra.Command{
 	},
 }
 
+var providerResetCmd = &cobra.Command{
+	Use:   "reset <provider>",
+	Short: "Clear a provider's metrics and reset its sync state",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		p, err := lookupProvider(args[0])
+		if err != nil {
+			return err
+		}
+
+		// Delete all metrics owned by this provider.
+		for _, m := range p.Metrics() {
+			if err := client.Store.DeleteMetric(m); err != nil {
+				if !errors.Is(err, store.ErrNotFound) {
+					return err
+				}
+			}
+		}
+
+		// Reset last_sync in the provider config so next sync pulls everything.
+		configKey := "provider." + p.Name()
+		raw, err := client.Store.GetConfig(configKey)
+		if err != nil && !errors.Is(err, store.ErrConfigNotFound) {
+			return err
+		}
+		if raw != nil {
+			var cfg map[string]json.RawMessage
+			if err := json.Unmarshal(raw, &cfg); err == nil {
+				delete(cfg, "last_sync")
+				updated, _ := json.Marshal(cfg)
+				client.Store.SetConfig(configKey, updated)
+			}
+		}
+
+		fmt.Printf("Reset %s provider — run 'metrics provider sync %s' to re-sync\n", p.Name(), p.Name())
+		return nil
+	},
+}
+
 func init() {
 	providerCmd.AddCommand(providerSetupCmd)
 	providerCmd.AddCommand(providerSyncCmd)
 	providerCmd.AddCommand(providerListCmd)
+	providerCmd.AddCommand(providerResetCmd)
 	rootCmd.AddCommand(providerCmd)
 }

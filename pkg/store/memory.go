@@ -52,6 +52,16 @@ func (s *MemoryStore) GetMetric(name string) (*metric.Metric, error) {
 	return cp, nil
 }
 
+func (s *MemoryStore) DeleteMetric(name string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, ok := s.metrics[name]; !ok {
+		return fmt.Errorf("metric %q: %w", name, ErrNotFound)
+	}
+	delete(s.metrics, name)
+	return nil
+}
+
 func (s *MemoryStore) SetConfig(key string, value json.RawMessage) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

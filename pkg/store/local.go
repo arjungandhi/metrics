@@ -76,6 +76,17 @@ func (s *LocalStore) GetMetric(name string) (*metric.Metric, error) {
 	return s.loadMetric(name)
 }
 
+func (s *LocalStore) DeleteMetric(name string) error {
+	err := os.Remove(s.metricPath(name))
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return fmt.Errorf("metric %q: %w", name, ErrNotFound)
+		}
+		return err
+	}
+	return nil
+}
+
 func (s *LocalStore) SetConfig(key string, value json.RawMessage) error {
 	if err := os.MkdirAll(s.configDir(), 0755); err != nil {
 		return fmt.Errorf("creating config dir: %w", err)
