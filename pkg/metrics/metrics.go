@@ -42,7 +42,7 @@ func New(cfg *config.Config) (*Client, error) {
 func openStore(cfg *config.Config) (store.Store, error) {
 	switch cfg.Store {
 	case config.StoreSQL, "":
-		return store.NewSQLStore(filepath.Join(cfg.Dir, "metrics.db"))
+		return store.NewSQLStore(filepath.Join(cfg.Dir, "metrics.db") + "?_busy_timeout=5000")
 	case config.StoreLocal:
 		return store.NewLocalStore(cfg.Dir)
 	case config.StoreMemory:
